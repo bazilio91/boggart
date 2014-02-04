@@ -16,7 +16,6 @@ static byte mymac[] = {
 byte Ethernet::buffer[700];
 
 char website[] PROGMEM = "192.168.1.133";
-char token[] PROGMEM = "verysecuretoken";
 
 unsigned long previousMillis = 0;
 static byte session_id;
@@ -90,33 +89,30 @@ static void my_callback (byte status, word off, word len) {
 }
 
 void sendTemperature() {
+
   DHT.read11(dht_dpin);
+
   char string_temp[7];
 
   Stash stash;
   byte sd = stash.create();
-
   dtostrf(DHT.humidity, 2, 2, string_temp);
-  stash.print("homeHumidity=");
+  stash.print("{\"sensors\":[{\"source\":\"DHT11\",\"token\":\"dht11token\",\"params\":{");
+  stash.print("\"homeHumidity\":");
   stash.print(string_temp);
   dtostrf(DHT.temperature, 2, 2, string_temp);
-  stash.print("&homeTemp=");
+  stash.print(",\"homeTemp\":");
   stash.print(string_temp);
+  stash.print("}}]}");
   stash.save();
-
-  //  Stash::prepare(PSTR("GET /api/update?$H HTTP/1.0" "\r\n"
-  //    "Host: $F" "\r\n" "\r\n"), 
-  //  sd, website);
 
   Stash::prepare(PSTR("POST http://$F/api/ HTTP/1.0" "\r\n"
     "Host: $F" "\r\n"
-    "Content-Type: application/x-www-form-urlencoded" "\r\n"
-    "X-Token: $F" "\r\n"
-    "X-Source: DHT11" "\r\n"
+    "Content-Type: application/json" "\r\n"
     "Content-Length: $D" "\r\n"
     "\r\n"
     "$H"),
-  website, website, token, stash.size(), sd);
+  website, website, stash.size(), sd);
 
 
   session_id = ether.tcpSend();
@@ -135,9 +131,3 @@ void checkResponse() {
     actual_status = STATUS_IDLE;  
   }
 }
-
-
-
-
-
-

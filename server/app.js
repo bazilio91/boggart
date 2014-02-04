@@ -31,12 +31,28 @@ var app = express();
 // Configure server
 app.set('port', config.port || 3000);
 app.use(express.favicon());
-app.use(express.bodyParser());
-app.use(express.logger('dev'));
 
 // Mount statics
 app.use(express.static(path.join(__dirname, '../.tmp')));
 app.use(express.static(path.join(__dirname, '../client')));
+
+//app.use(function (req, res, next) {
+//    var data = '';
+//    req.on('data', function (chunk) {
+//        data += chunk;
+//    });
+//
+//    req.on('end', function () {
+//        console.log(data);
+//        next();
+//    });
+//});
+
+app.use(express.bodyParser());
+app.use(express.logger('dev'));
+
+
+
 
 require('./routes')(app);
 // Route index.html

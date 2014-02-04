@@ -18,13 +18,13 @@ module.exports = function (app) {
         });
     });
 
-    var handlePost = function (sensor, req, res) {
+    var handlePost = function (sensor, sensorData, req, res) {
         models.Param.find({sensor: sensor._id}).exec(
             function (err, params) {
                 if (err) {
                     throw err;
                 }
-                _.each(req.body, function (val, key) {
+                _.each(sensorData.params, function (val, key) {
                     var param = _.findWhere(params, {name: key});
                     if (param) {
                         param.value = val;
@@ -46,28 +46,31 @@ module.exports = function (app) {
             });
     };
     app.post('/api', function (req, res) {
-        models.Sensor.findOne({'token': req.headers['x-token']}).populate('params')
-            .exec(function (err, sensor) {
-                if (err) {
-                    throw err;
-                }
-                if (!sensor) {
-                    sensor = new models.Sensor({
-                        token: req.headers['x-token'],
-                        type: req.headers['x-source']
-                    });
+        _.each(req.body.sensors, function (sensorData) {
+            models.Sensor.findOne({token: sensorData.token}).populate('params')
+                .exec(function (err, sensor) {
+                    if (err) {
+                        throw err;
+                    }
+                    if (!sensor) {
+                        sensor = new models.Sensor({
+                            token: sensorData.token,
+                            type: sensorData.source
+                        });
 
-                    sensor.save(function (err) {
-                        if (err) {
-                            throw err;
-                        }
-                        console.log('New sensor[token=%s] registred!'.green, sensor.token);
-                        handlePost(sensor, req, res);
-                    });
-                } else {
-                    console.log('sensor found', sensor);
-                    handlePost(sensor, req, res);
-                }
-            });
+                        sensor.save(function (err) {
+                            if (err) {
+                                throw err;
+                            }
+                            console.log('New sensor[token=%s] registred!'.green, sensor.token);
+                            handlePost(sensor, req, res);
+                        });
+                    } else {
+                        console.log('sensor found', sensor);
+                        handlePost(sensor, sensorData, req, res);
+                    }
+                });
+        });
+
     });
 };
