@@ -6,16 +6,30 @@ var express = require('express'),
     http = require('http'),
     path = require('path'),
     _ = require('lodash'),
+    mongoose = require('mongoose'),
+    config = require('../config/server.js'),
     collectors = require('./collectors'),
     collectorsStack = {},
     data = {},
     lastUpdated = 'never';
 
+global.models = require('./models');
+mongoose.connect(config.mongoDsn);
+global.db = mongoose.connection;
+
+db.on('error', function (err) {
+    console.log('DB connection error:'.red, err.message);
+});
+db.once('open', function callback() {
+    console.log('Connected to DB!'.green);
+});
+
+
 // Create server
 var app = express();
 
 // Configure server
-app.set('port', 3000);
+app.set('port', config.port || 3000);
 app.use(express.favicon());
 app.use(express.bodyParser());
 app.use(express.logger('dev'));
@@ -24,27 +38,12 @@ app.use(express.logger('dev'));
 app.use(express.static(path.join(__dirname, '../.tmp')));
 app.use(express.static(path.join(__dirname, '../client')));
 
+require('./routes')(app);
 // Route index.html
 app.get('/', function (req, res) {
     res.sendfile(path.join(__dirname, '../client/index.html'));
 });
 
-
-app.get('/api/update', function (req, res) {
-    console.log('Api GET update: '.green, req.query);
-    res.send('ok');
-});
-
-app.get('/api', function (req, res) {
-    res.send({data: data, date: lastUpdated});
-});
-
-
-app.post('/api', function (req, res) {
-    console.log('Api input: '.green, req.body);
-    res.send(200);
-
-});
 // Start server
 http.createServer(app).listen(app.get('port'), '0.0.0.0', function () {
     console.log(
