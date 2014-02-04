@@ -1,0 +1,9 @@
+$icon-font-path: "/components/sass-bootstrap/fonts/";
+
+//noinspection CssUnknownTarget
+@import "sass-bootstrap/lib/bootstrap";
+
+.panel-default {
+  margin: 50px auto 0;
+  max-width: 600px;
+}

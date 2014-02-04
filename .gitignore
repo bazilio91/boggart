@@ -1,0 +1,12 @@
+.idea
+.DS_Store
+*.iml
+
+.sass-cache
+.tmp
+dist
+client/components
+node_modules
+webkitbuilds
+test/bower_components
+client/components

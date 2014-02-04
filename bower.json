@@ -1,0 +1,15 @@
+{
+  "name": "home",
+  "version": "0.0.0",
+  "dependencies": {
+    "backbone-amd": "~1.1.0",
+    "backbone.babysitter": "~0.0.6",
+    "backbone.marionette": "~1.2.0",
+    "backbone.wreqr": "~0.2.0",
+    "jquery": "~2.0.3",
+    "modernizr": "~2.6.2",
+    "requirejs": "~2.1.9",
+    "sass-bootstrap": "~3.0.0",
+    "underscore-amd": "~1.5.2"
+  }
+}
