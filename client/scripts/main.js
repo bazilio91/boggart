@@ -22,17 +22,18 @@ require(['app', 'underscore'], function (App, _) {
     App.start();
 
     $(function () {
-        setInterval(function () {
+        function update() {
             $.get('/api/', function (res) {
                 var $buffer = $(document.createDocumentFragment());
-                $('.panel-footer').text('Last updated at ' + res.date);
-                _.each(res.data, function (val, key) {
-                    $buffer.append('<tr><td>' + key + '</td><td>' + val + '</td></tr>');
+                _.each(res.data, function (param) {
+                    $buffer.append('<tr><td>' + param.name + '</td><td>' + param.value + '</td>' +
+                        '<td>' + new Date(param.date) + '</td></tr>');
                 });
                 $('#status').html($buffer);
             });
-
-        }, 5000);
+        }
+        setInterval(update, 5000);
+        update();
 
     })
 });

@@ -11,8 +11,7 @@ var ParamSchema = new Schema({
         required: true
     },
     date: {
-        type: Date,
-        default: Date.now
+        type: Date
     },
     sensor: {
         type: Schema.Types.ObjectId,
@@ -21,6 +20,7 @@ var ParamSchema = new Schema({
 });
 module.exports.ParamSchema = ParamSchema;
 module.exports.Param = mongoose.model('Param', ParamSchema);
+module.exports.ParamHistory = mongoose.model('ParamHistory', ParamSchema);
 
 var SensorSchema = new Schema({
     type: {
@@ -40,13 +40,3 @@ var SensorSchema = new Schema({
 });
 module.exports.SensorSchema = SensorSchema;
 module.exports.Sensor = mongoose.model('Sensor', SensorSchema);
-console.log(1);
-//
-//var Data = new Schema({
-//    sensor: [Sensor],
-//    date: {
-//        type: Date,
-//        default: Date.now
-//    }
-//});
-//module.exports.Data = Data;

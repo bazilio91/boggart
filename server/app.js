@@ -2,6 +2,7 @@
 
 // Module dependencies
 var express = require('express'),
+    EventEmitter2 = require('eventemitter2').EventEmitter2,
     colors = require('colors'),
     http = require('http'),
     path = require('path'),
@@ -27,7 +28,9 @@ db.once('open', function callback() {
 
 // Create server
 var app = express();
-
+app.events = new EventEmitter2({
+    wildcard: true, delimiter: ':', maxListeners: 100
+});
 // Configure server
 app.set('port', config.port || 3000);
 app.use(express.favicon());
@@ -52,12 +55,20 @@ app.use(express.bodyParser());
 app.use(express.logger('dev'));
 
 
-
-
 require('./routes')(app);
 // Route index.html
 app.get('/', function (req, res) {
     res.sendfile(path.join(__dirname, '../client/index.html'));
+});
+
+app.events.on('param:*', function (val, key) {
+    console.log('Property[%s]: %s'.grey, key, val);
+});
+
+app.events.on('param:homeTemp', function (val) {
+    if (val > 25) {
+        console.log('Hot!'.red);
+    }
 });
 
 // Start server
