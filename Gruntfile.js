@@ -95,7 +95,11 @@ module.exports = function (grunt) {
         },
         jst: {
             options: {
-                amd: true
+                amd: true,
+                processName: function (filename) {
+                    return filename.replace('client/scripts/templates/', '').replace('.ejs', '');
+                }
+
             },
             compile: {
                 files: {

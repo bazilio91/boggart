@@ -8,7 +8,9 @@ require.config({
         'marionette': '../components/backbone.marionette/lib/core/amd/backbone.marionette',
         'backbone.wreqr': '../components/backbone.wreqr/lib/amd/backbone.wreqr',
         'backbone.babysitter': '../components/backbone.babysitter/lib/amd/backbone.babysitter',
-        'bootstrap': '../components/sass-bootstrap/dist/js/bootstrap'
+        'bootstrap': '../components/sass-bootstrap/dist/js/bootstrap',
+        'loglevel': '../components/loglevel/dist/loglevel',
+        'config': '../config/config'
     },
     shim: {
         'bootstrap': {
@@ -19,6 +21,7 @@ require.config({
 });
 
 require(['app', 'underscore'], function (App, _) {
+    window.App = App;
     App.start();
 
     $(function () {

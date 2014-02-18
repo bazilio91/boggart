@@ -46,5 +46,5 @@ module.exports.speak = function (text, lang) {
                     playFile(path);
                 });
             })
-    }
+   }
 };
