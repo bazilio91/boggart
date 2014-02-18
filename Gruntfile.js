@@ -1,4 +1,5 @@
-// Generated on 2014-02-01 using generator-marionette-express 0.1.2
+var modules = require('./config/modules.js'),
+    _ = require('lodash');
 
 'use strict';
 
@@ -6,20 +7,50 @@ module.exports = function (grunt) {
     require('time-grunt')(grunt);
     require('load-grunt-tasks')(grunt);
 
+
+    var moduleFiles = [],
+        watchModuleJS = [];
+    _.each(modules, function (options, moduleName) {
+        var module = require(moduleName);
+        moduleFiles[moduleFiles.length] = {
+            expand: true,
+            cwd: 'node_modules/' + moduleName + '/client/scripts',
+            src: ['**'],
+            dest: '.tmp/scripts/modules/' + module.name
+        };
+
+        moduleFiles[moduleFiles.length] = {
+            expand: true,
+            cwd: 'node_modules/' + moduleName + '/client/styles',
+            src: ['**'],
+            dest: '.tmp/styles/process/',
+            filter: 'isFile',
+            rename: function (dest, src) {
+                return dest + moduleName + '_' + src;
+            }
+        };
+
+        watchModuleJS[watchModuleJS.length] = [
+            'node_modules/' + moduleName + '/client/scripts/**/*.js'
+        ]
+    });
+
     grunt.initConfig({
         config: {
             app: 'client',
             server: 'server',
             dist: 'dist'
         },
+        concat: {
+            server: {
+                src: ['.tmp/styles/*.css'],
+                dest: '.tmp/styles/main.css'
+            }
+        },
         watch: {
             compass: {
                 files: ['<%= config.app %>/styles/{,*/}*.{scss,sass}'],
-                tasks: ['compass:server', 'autoprefixer']
-            },
-            styles: {
-                files: ['<%= config.app %>/styles/{,*/}*.css'],
-                tasks: ['copy:styles', 'autoprefixer']
+                tasks: ['copy:styles', 'compass:server', 'concat:server', 'autoprefixer']
             },
             livereload: {
                 options: {
@@ -42,6 +73,10 @@ module.exports = function (grunt) {
             jst: {
                 files: ['<%= config.app %>/scripts/templates/{,*/}*.ejs'],
                 tasks: ['jst']
+            },
+            modulesJS: {
+                files: watchModuleJS,
+                tasks: ['copy:modules']
             }
         },
         shell: {
@@ -56,8 +91,7 @@ module.exports = function (grunt) {
                 win: true, // We want to build it for win
                 linux32: false, // We don't need linux32
                 linux64: false, // We don't need linux64
-                version: '0.8.2',
-//                mac_icns: '.tmp/styles/icons/icon.icns'
+                version: '0.8.2'
             },
             // ResHacker.exe -addoverwrite "Project.exe", "Project.exe", "ProgramIcon.ico", ICONGROUP, MAINICON, 0
             src: ['./*'] // Your node-wekit app
@@ -99,7 +133,6 @@ module.exports = function (grunt) {
                 processName: function (filename) {
                     return filename.replace('client/scripts/templates/', '').replace('.ejs', '');
                 }
-
             },
             compile: {
                 files: {
@@ -143,12 +176,12 @@ module.exports = function (grunt) {
         },
         compass: {
             options: {
-                sassDir: '<%= config.app %>/styles',
+                sassDir: '.tmp/styles/process/',
                 cssDir: '.tmp/styles',
                 generatedImagesDir: '.tmp/images/generated',
-                imagesDir: '<%= config.app %>/images',
-                javascriptsDir: '<%= config.app %>/scripts',
-                fontsDir: '<%= config.app %>/fonts',
+                imagesDir: '.tmp/images',
+                javascriptsDir: '.tmp/scripts',
+                fontsDir: '.tmp/fonts',
                 importPath: '<%= config.app %>/components',
                 httpImagesPath: '/images',
                 httpGeneratedImagesPath: '/images/generated',
@@ -284,8 +317,13 @@ module.exports = function (grunt) {
                 expand: true,
                 dot: true,
                 cwd: '<%= config.app %>/styles',
-                dest: '.tmp/styles/',
-                src: '{,*/}*.css'
+                dest: '.tmp/styles/process',
+                src: '**'
+            },
+            modules: {
+                expand: true,
+                cwd: './',
+                files: moduleFiles
             }
         },
         modernizr: {
@@ -331,6 +369,7 @@ module.exports = function (grunt) {
 
         grunt.task.run([
             'clean:server',
+            'copy:modules',
             'jst',
             'concurrent:server',
             'autoprefixer',

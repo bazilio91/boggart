@@ -9,14 +9,22 @@ define([
     /**
      * @class DashboardModule
      */
-    var DashboardModule = function (DashboardModule, App, Backbone, Marionette, $, _) {
-        new DashboardRouter();
-
-        App.menu.add({
-            text: 'Dashboard',
-            href: 'dashboard'
+    var DashboardModule = function (DashboardModule) {
+        DashboardModule.addInitializer(function(){
+            new DashboardRouter();
         });
-        App.log.info('DashboardModule has started');
+
+        DashboardModule.addInitializer(function(){
+            App.menu.add({
+                text: 'Dashboard',
+                href: 'dashboard'
+            });
+        });
+
+        DashboardModule.on('start', function () {
+            App.trigger('module:start', 'Dashboard');
+            App.log.info('DashboardModule has started');
+        });
     };
 
     return DashboardModule;

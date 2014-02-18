@@ -8,13 +8,19 @@ var express = require('express'),
     path = require('path'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
+    SessionStore = require("session-mongoose")(express),
     _ = require('lodash'),
     mongoose = require('mongoose'),
+
     config = require('../config/server.js'),
-    collectors = require('./collectors'),
-    collectorsStack = {},
-    data = {},
-    lastUpdated = 'never';
+    modules = require('../config/modules.js'),
+
+//    collectors = require('./collectors'),
+//    collectorsStack = {},
+    store = new SessionStore({
+        url: config.mongoDsn,
+        interval: 120000 // expiration check worker run interval in millisec (default: 60000)
+    });
 
 global.models = require('./models');
 mongoose.connect(config.mongoDsn);
@@ -75,6 +81,14 @@ app.events = new EventEmitter2({
     wildcard: true, delimiter: ':', maxListeners: 100
 });
 
+var allowCrossDomain = function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', config.allowedDomains);
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+    next();
+};
+
 
 app.configure(function () {
 // Configure server
@@ -90,45 +104,37 @@ app.configure(function () {
     app.engine('ejs', require('ejs-locals'));
 
     app.use(express.logger('dev'));
+    app.use(allowCrossDomain);
 
     app.use(express.cookieParser());
     app.use(express.bodyParser());
+    app.use(express.session({
+        secret: 'hohohome',
+        store: store,
+        cookie: { maxAge: 900000 } // expire session in 15 min or 900 seconds
+    }));
     app.use(express.methodOverride());
-    app.use(express.session({ secret: 'keyboard cat' }));
     app.use(passport.initialize());
     app.use(passport.session());
 });
 
-
-//app.use(function (req, res, next) {
-//    var data = '';
-//    req.on('data', function (chunk) {
-//        data += chunk;
-//    });
-//
-//    req.on('end', function () {
-//        console.log(data);
-//        next();
-//    });
-//});
-
 require('./routes')(app);
 
+_.each(modules, function (options, moduleName) {
+    var module = require(moduleName).init(options, app.events);
 
-// Simple route middleware to ensure user is authenticated.
-//   Use this route middleware on any resource that needs to be protected.  If
-//   the request is authenticated (typically via a persistent login session),
-//   the request will proceed.  Otherwise, the user will be redirected to the
-//   login page.
+    _.each(module.routers, function (router) {
+        app.use(router.middleware);
+    });
 
-app.events.on('param:*', function (val, key) {
-    console.log('Property[%s]: %s'.grey, key, val);
-});
+    _.each(module.models, function (obj, key) {
+        if (models[key]) {
+            throw new Error('Error initialising module ' + moduleName + ', ' +
+                key + ' already defined');
+        }
 
-app.events.on('param:homeTemp', function (val) {
-    if (val > 25) {
-        console.log('Hot!'.red);
-    }
+        models[key] = obj;
+    });
 });
 
 // Start server

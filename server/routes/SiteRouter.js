@@ -11,8 +11,12 @@ var ensureAuthenticated = function (req, res, next) {
 
 module.exports = function (app) {
     "use strict";
-    app.get('/', ensureAuthenticated, function (req, res) {
+    app.get('/client', ensureAuthenticated, function (req, res) {
         res.render('index', { user: req.user, message: req.session.messages });
+    });
+
+    app.get('/', ensureAuthenticated, function (req, res) {
+        res.redirect('/client');
     });
 
     app.get('/login', function (req, res) {

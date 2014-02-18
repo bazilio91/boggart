@@ -23,20 +23,4 @@ require.config({
 require(['app', 'underscore'], function (App, _) {
     window.App = App;
     App.start();
-
-    $(function () {
-        function update() {
-            $.get('/api/', function (res) {
-                var $buffer = $(document.createDocumentFragment());
-                _.each(res.data, function (param) {
-                    $buffer.append('<tr><td>' + param.name + '</td><td>' + param.value + '</td>' +
-                        '<td>' + new Date(param.date) + '</td></tr>');
-                });
-                $('#status').html($buffer);
-            });
-        }
-        setInterval(update, 5000);
-        update();
-
-    })
 });

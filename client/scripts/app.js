@@ -19,29 +19,42 @@ define([
         App.log.info('Application has started');
     });
 
+
     App.addInitializer(function () {
         loglevel.setLevel(config.loglevel);
         App.log = loglevel;
     });
 
     App.addInitializer(function () {
+        var moduleNames = {};
         _.each(config.modules, function (options, name) {
             require([['modules', name, name + 'Module'].join('/')], function (module) {
-                App.module(name, {
-                    define: module
-                });
+                moduleNames[name] = false;
+                App.module(name, module);
             });
+        });
+
+        // Wait for all modules started & load controller action
+        App.on('module:start', function (name) {
+            delete moduleNames[name];
+            if (!_.isEmpty(moduleNames)) {
+                return;
+            }
+
+            Backbone.history.loadUrl(Backbone.history.fragment);
         });
     });
 
+
     App.addInitializer(function () {
-        App.menu = new MenuCollection();
+        App.menu = new MenuCollection({
+            href: '#',
+            text: 'Home'
+        });
         App.leftMenu.show(new LeftMenuView({collection: App.menu}));
     });
 
     App.addInitializer(function () {
-
-
         $(document).on('click', 'a', function (event) {
             var fragment = Backbone.history.getFragment($(this).attr('href')),
                 matched = _.any(Backbone.history.handlers, function (handler) {
@@ -55,7 +68,7 @@ define([
         });
 
         if (!Backbone.history.started) {
-            Backbone.history.start({ pushState: true });
+            Backbone.history.start({ pushState: false });
         }
     });
 
