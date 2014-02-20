@@ -9,7 +9,7 @@ module.exports = function (grunt) {
 
 
     var moduleFiles = [],
-        watchModuleJS = [];
+        watchModuleJS = ['config/modules.js'];
     _.each(modules, function (options, moduleName) {
         var module = require(moduleName);
         moduleFiles[moduleFiles.length] = {

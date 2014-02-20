@@ -1,22 +1,21 @@
 var _ = require('lodash'),
     path = require('path');
 
-var ensureAuthenticated = function (req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-};
-
-
 module.exports = function (app) {
-    "use strict";
-    app.get('/client', ensureAuthenticated, function (req, res) {
-        res.render('index', { user: req.user, message: req.session.messages });
-    });
+    'use strict';
+    var ensureAuthenticated = function (req, res, next) {
+        if (req.isAuthenticated()) {
+            return next();
+        }
+        res.redirect('/login');
+    };
 
     app.get('/', ensureAuthenticated, function (req, res) {
         res.redirect('/client');
+    });
+
+    app.get('/client', ensureAuthenticated, function (req, res) {
+        res.render('index', { user: req.user, message: req.session.messages });
     });
 
     app.get('/login', function (req, res) {

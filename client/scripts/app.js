@@ -12,7 +12,8 @@ define([
     var App = new Marionette.Application();
 
     App.addRegions({
-        leftMenu: '#left-menu'
+        leftMenu: '#left-menu',
+        main: '#main'
     });
 
     App.on('initialize:after', function () {
