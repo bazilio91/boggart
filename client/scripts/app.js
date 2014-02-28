@@ -2,11 +2,12 @@ define([
     'marionette',
     'jquery',
     'loglevel',
+    'io',
 
     'config',
     'models/menu/MenuCollection',
     'views/menu/LeftMenuView'
-], function (Marionette, $, loglevel, config, MenuCollection, LeftMenuView) {
+], function (Marionette, $, loglevel, io, config, MenuCollection, LeftMenuView) {
     'use strict';
 
     var App = new Marionette.Application();
@@ -14,6 +15,11 @@ define([
     App.addRegions({
         leftMenu: '#left-menu',
         main: '#main'
+    });
+
+    App.addInitializer(function () {
+        App.socket = io.connect();
+        App.socket.emit('ready');
     });
 
     App.on('initialize:after', function () {

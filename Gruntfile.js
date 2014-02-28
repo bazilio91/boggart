@@ -9,7 +9,8 @@ module.exports = function (grunt) {
 
 
     var moduleFiles = [],
-        watchModuleJS = ['config/modules.js'];
+        watchModuleJS = ['config/modules.js'],
+        watchServerModuleJS = ['config/modules.js'];
     _.each(modules, function (options, moduleName) {
         var module = require(moduleName);
         moduleFiles[moduleFiles.length] = {
@@ -32,7 +33,11 @@ module.exports = function (grunt) {
 
         watchModuleJS[watchModuleJS.length] = [
             'node_modules/' + moduleName + '/client/scripts/**/*.js'
-        ]
+        ];
+
+        watchServerModuleJS[watchServerModuleJS.length] = [
+            'node_modules/' + moduleName + '/*.js'
+        ];
     });
 
     grunt.initConfig({
@@ -67,7 +72,7 @@ module.exports = function (grunt) {
                 options: {
                     nospawn: true
                 },
-                files: ['<%= config.server %>/**/*.js'],
+                files: ['<%= config.server %>/**/*.js'].concat(watchServerModuleJS),
                 tasks: ['express:server']
             },
             jst: {

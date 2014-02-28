@@ -10,7 +10,9 @@ require.config({
         'backbone.babysitter': '../components/backbone.babysitter/lib/amd/backbone.babysitter',
         'bootstrap': '../components/sass-bootstrap/dist/js/bootstrap',
         'loglevel': '../components/loglevel/dist/loglevel',
-        'config': '../config/config'
+        'config': '../config/config',
+        'moment': '../components/momentjs/moment',
+        'io': '../components/socket.io-client/dist/socket.io'
     },
     shim: {
         'bootstrap': {

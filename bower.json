@@ -11,6 +11,8 @@
     "requirejs": "~2.1.9",
     "sass-bootstrap": "~3.0.0",
     "underscore-amd": "~1.5.2",
-    "loglevel": "~0.5.0"
+    "loglevel": "~0.5.0",
+    "momentjs": "~2.5.1",
+    "socket.io-client": "~0.9.16"
   }
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 // Module dependencies
-var express = require('express'),
+var express = require('express.io'),
     EventEmitter2 = require('eventemitter2').EventEmitter2,
     colors = require('colors'),
     http = require('http'),
@@ -77,6 +77,9 @@ passport.use(new LocalStrategy(function (username, password, done) {
 
 // Create server
 var app = express();
+app.http().io();
+app.io.set('log', true);
+app.io.set('log level', 3);
 app.events = new EventEmitter2({
     wildcard: true, delimiter: ':', maxListeners: 100
 });
@@ -138,7 +141,7 @@ _.each(modules, function (options, moduleName) {
 });
 
 // Start server
-http.createServer(app).listen(app.get('port'), '0.0.0.0', function () {
+app.listen(app.get('port'), '0.0.0.0', function () {
     console.log(
         'Express server listening on port '.green + app.get('port'),
         '\nPress Ctrl+C to shutdown'.grey
