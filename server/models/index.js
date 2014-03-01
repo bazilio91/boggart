@@ -1,37 +1,31 @@
-var mongoose = require('mongoose'),
-    bcrypt = require('bcrypt'),
-    SALT_WORK_FACTOR = 10;
+var bcrypt = require('bcrypt'),
+    config = require('../../config/server.js');
 
-module.exports.UserSchema = mongoose.Schema({
+var User = thinky.createModel('User', {
+    id: String,
     username: {
-        type: String,
-        required: true,
-        unique: true
+        _type: String,
+        enforce: { missing: true }
     },
     email: {
-        type: String,
-        required: true,
-        unique: true
+        _type: String,
+        enforce: { missing: true }
     },
     password: {
-        type: String,
-        required: true
+        _type: String,
+        enforce: { missing: true }
     }
 });
 
-module.exports.UserSchema.pre('save', function (next) {
-    var user = this;
+User.define('setPassword', function (newPassword) {
+    'use strict';
 
-    if (!user.isModified('password')) {
-        return next();
-    }
-
-    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+    bcrypt.genSalt(config.saltWorkFactor, function (err, salt) {
         if (err) {
             return next(err);
         }
 
-        bcrypt.hash(user.password, salt, function (err, hash) {
+        bcrypt.hash(User.password, salt, function (err, hash) {
             if (err) return next(err);
             user.password = hash;
             return next();
@@ -39,8 +33,29 @@ module.exports.UserSchema.pre('save', function (next) {
     });
 });
 
+//module.exports.UserSchema.pre('save', function (next) {
+//    var user = this;
+//
+//    if (!user.isModified('password')) {
+//        return next();
+//    }
+//
+//    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+//        if (err) {
+//            return next(err);
+//        }
+//
+//        bcrypt.hash(user.password, salt, function (err, hash) {
+//            if (err) return next(err);
+//            user.password = hash;
+//            return next();
+//        });
+//    });
+//});
+
 // Password verification
-module.exports.UserSchema.methods.comparePassword = function (candidatePassword, cb) {
+User.define('comparePassword', function (candidatePassword, cb) {
+    console.log(this);
     bcrypt.compare(candidatePassword, this.password, function (err, isMatch) {
         if (err) {
             return cb(err);
@@ -48,6 +63,6 @@ module.exports.UserSchema.methods.comparePassword = function (candidatePassword,
 
         return cb(null, isMatch);
     });
-};
+});
 
-module.exports.User = mongoose.model('User', module.exports.UserSchema);
+module.exports.User = User;

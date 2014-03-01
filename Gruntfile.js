@@ -9,6 +9,7 @@ module.exports = function (grunt) {
 
 
     var moduleFiles = [],
+        moduleLess = {},
         watchModuleJS = ['config/modules.js'],
         watchServerModuleJS = ['config/modules.js'];
     _.each(modules, function (options, moduleName) {
@@ -20,16 +21,9 @@ module.exports = function (grunt) {
             dest: '.tmp/scripts/modules/' + module.name
         };
 
-        moduleFiles[moduleFiles.length] = {
-            expand: true,
-            cwd: 'node_modules/' + moduleName + '/client/styles',
-            src: ['**'],
-            dest: '.tmp/styles/process/',
-            filter: 'isFile',
-            rename: function (dest, src) {
-                return dest + moduleName + '_' + src;
-            }
-        };
+
+        moduleLess['.tmp/styles/process/' + module.name + '.css'] =
+            'node_modules/' + moduleName + '/client/styles/style.less';
 
         watchModuleJS[watchModuleJS.length] = [
             'node_modules/' + moduleName + '/client/scripts/**/*.js'
@@ -48,14 +42,14 @@ module.exports = function (grunt) {
         },
         concat: {
             server: {
-                src: ['.tmp/styles/*.css'],
+                src: ['.tmp/styles/process/*.css'],
                 dest: '.tmp/styles/main.css'
             }
         },
         watch: {
-            compass: {
-                files: ['<%= config.app %>/styles/{,*/}*.{scss,sass}'],
-                tasks: ['copy:styles', 'compass:server', 'concat:server', 'autoprefixer']
+            less: {
+                files: ['<%= config.app %>/styles/**/*.less'].concat(_.values(moduleLess)),
+                tasks: ['less', 'concat:server', 'autoprefixer']
             },
             livereload: {
                 options: {
@@ -179,30 +173,12 @@ module.exports = function (grunt) {
                 }
             }
         },
-        compass: {
-            options: {
-                sassDir: '.tmp/styles/process/',
-                cssDir: '.tmp/styles',
-                generatedImagesDir: '.tmp/images/generated',
-                imagesDir: '.tmp/images',
-                javascriptsDir: '.tmp/scripts',
-                fontsDir: '.tmp/fonts',
-                importPath: '<%= config.app %>/components',
-                httpImagesPath: '/images',
-                httpGeneratedImagesPath: '/images/generated',
-                httpFontsPath: '/fonts',
-                relativeAssets: false,
-                assetCacheBuster: false
-            },
+        less: {
             dist: {
-                options: {
-                    generatedImagesDir: '<%= config.dist %>/<%= config.app %>/images/generated'
-                }
-            },
-            server: {
-                options: {
-                    debugInfo: true
-                }
+                files: _.merge(
+                    {'.tmp/styles/process/main.css': '<%= config.app %>/styles/main.less'},
+                    moduleLess
+                )
             }
         },
         autoprefixer: {
@@ -214,7 +190,7 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: '.tmp/styles/',
-                        src: '{,*/}*.css',
+                        src: '*.css',
                         dest: '.tmp/styles/'
                     }
                 ]
@@ -318,13 +294,6 @@ module.exports = function (grunt) {
                     }
                 ]
             },
-            styles: {
-                expand: true,
-                dot: true,
-                cwd: '<%= config.app %>/styles',
-                dest: '.tmp/styles/process',
-                src: '**'
-            },
             modules: {
                 expand: true,
                 cwd: './',
@@ -343,15 +312,13 @@ module.exports = function (grunt) {
         },
         concurrent: {
             server: [
-                'compass',
-                'copy:styles'
+                'less'
             ],
             test: [
-                'copy:styles'
+                'less'
             ],
             dist: [
-                'compass',
-                'copy:styles',
+                'less',
                 'imagemin',
                 'svgmin',
                 'htmlmin'
@@ -377,6 +344,7 @@ module.exports = function (grunt) {
             'copy:modules',
             'jst',
             'concurrent:server',
+            'concat',
             'autoprefixer',
             'express:server',
             'watch'

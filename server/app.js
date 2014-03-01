@@ -8,30 +8,33 @@ var express = require('express.io'),
     path = require('path'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
-    SessionStore = require("session-mongoose")(express),
     _ = require('lodash'),
-    mongoose = require('mongoose'),
+    thinky = require('./thinky'),
+    connect = require('connect'),
+    RDBStore = require('connect-rethinkdb')(connect),
 
     config = require('../config/server.js'),
-    modules = require('../config/modules.js'),
+    modules = require('../config/modules.js');
 
 //    collectors = require('./collectors'),
 //    collectorsStack = {},
-    store = new SessionStore({
-        url: config.mongoDsn,
-        interval: 120000 // expiration check worker run interval in millisec (default: 60000)
-    });
+//    store = new SessionStore({
+//        url: config.mongoDsn,
+//        interval: 120000 // expiration check worker run interval in millisec (default: 60000)
+//    });
+
+var rDBStore = new RDBStore({
+    flushOldSessIntvl: 60000,
+    clientOptions: {
+        db: config.db.name,
+        host: config.db.host,
+        port: config.db.port
+    },
+    table: 'session'
+});
+
 
 global.models = require('./models');
-mongoose.connect(config.mongoDsn);
-global.db = mongoose.connection;
-
-db.on('error', function (err) {
-    console.log('DB connection error:'.red, err.message);
-});
-db.once('open', function callback() {
-    console.log('Connected to DB!'.green);
-});
 
 // Passport session setup.
 //   To support persistent login sessions, Passport needs to be able to
@@ -43,7 +46,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-    models.User.findById(id, function (err, user) {
+    models.User.get(id, function (err, user) {
         done(err, user);
     });
 });
@@ -56,12 +59,16 @@ global.passport = passport;
 //   with a user object.  In the real world, this would query a database;
 //   however, in this example we are using a baked-in set of users.
 passport.use(new LocalStrategy(function (username, password, done) {
-    models.User.findOne({ username: username }, function (err, user) {
+    models.User.filter({ username: username }).run(function (err, user) {
         if (err) {
             return done(err);
         }
-        if (!user) {
+        if (_.isArray(user) && !user.length || !user) {
             return done(null, false, { message: 'Unknown user ' + username });
+        }
+
+        if (_.isArray(user)) {
+            user = user[0];
         }
         user.comparePassword(password, function (err, isMatch) {
             if (err) return done(err);
@@ -113,7 +120,7 @@ app.configure(function () {
     app.use(express.bodyParser());
     app.use(express.session({
         secret: 'hohohome',
-        store: store,
+        store: rDBStore,
         cookie: { maxAge: 900000 } // expire session in 15 min or 900 seconds
     }));
     app.use(express.methodOverride());
@@ -124,7 +131,7 @@ app.configure(function () {
 require('./routes')(app);
 
 _.each(modules, function (options, moduleName) {
-    var module = require(moduleName).init(options, app.events);
+    var module = require(moduleName).init(options, app);
 
     _.each(module.routers, function (router) {
         app.use(router.middleware);

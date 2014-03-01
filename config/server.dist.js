@@ -5,5 +5,11 @@
 module.exports = {
     port: 3000,
 
-    mongoDsn: 'mongodb://localhost/home'
+    db: {
+        host: 'localhost',
+        port: 28015,
+        name: 'boggart'
+    },
+
+    saltWorkFactor: 10
 };
