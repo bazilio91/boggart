@@ -26,20 +26,44 @@ var createTable = thinky.createTable = function (tableName, cb) {
 
                 if ((result != null) && (result.created === 1)) {
                     console.log('Table `%s` created', tableName);
+                    app.events.emit('db:table:created:' + tableName);
                 }
                 else {
-                    console.log('Error: Table `%s` not created', tableName);
+                    throw new Error('Error: Table `%s` not created', tableName);
                 }
 
                 cb && cb(error, result);
             });
         } else {
             console.log('Table %s — ok!', tableName);
-            cb(null, null);
+            cb && cb(null, null);
         }
     });
 };
 
+var createIndex = thinky.createIndex = function (tableName, indexName, cb) {
+    r.db(config.db.name).table(tableName).indexList().run(connection, function (err, result) {
+        if (result.indexOf(indexName) === -1) {
+            r.db(config.db.name).table(tableName).indexCreate(indexName).run(connection, function (err, result) {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                if ((result != null) && (result.created === 1)) {
+                    console.log('Index %s:%s created', tableName, indexName);
+                    app.events.emit('db:table:' + tableName + ':indexCreated:' + indexName);
+                } else {
+                    throw new Error('Error: Index %s:%s not created'.red, tableName, indexName);
+                }
+
+                cb && cb(error, result);
+            });
+        } else {
+            console.log('Index s%:%s — ok!', tableName, indexName);
+            cb && cb(null, null);
+        }
+    });
+};
 // Connect
 var connect = function () {
     r.connect({
@@ -49,6 +73,8 @@ var connect = function () {
     }, function (error, conn) {
         if (error) throw error;
         connection = conn;
+        app.events.emit('db:connect');
+        console.log('\nDB conected!'.green);
         createDatabase();
     });
 };
@@ -93,8 +119,6 @@ var checkUser = function (error, result) {
                 });
         });
     });
-
-
 };
 
 // Create the database

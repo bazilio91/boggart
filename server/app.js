@@ -1,9 +1,14 @@
 'use strict';
 
-// Module dependencies
+
 var express = require('express.io'),
-    EventEmitter2 = require('eventemitter2').EventEmitter2,
-    colors = require('colors'),
+    EventEmitter2 = require('eventemitter2').EventEmitter2;
+global.app = express();
+app.events = new EventEmitter2({
+    wildcard: true, delimiter: ':', maxListeners: 100
+});
+
+var colors = require('colors'),
     http = require('http'),
     path = require('path'),
     passport = require('passport'),
@@ -83,13 +88,9 @@ passport.use(new LocalStrategy(function (username, password, done) {
 
 
 // Create server
-var app = express();
 app.http().io();
 app.io.set('log', true);
 app.io.set('log level', 3);
-app.events = new EventEmitter2({
-    wildcard: true, delimiter: ':', maxListeners: 100
-});
 
 var allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', config.allowedDomains);
@@ -126,24 +127,24 @@ app.configure(function () {
     app.use(express.methodOverride());
     app.use(passport.initialize());
     app.use(passport.session());
-});
 
-require('./routes')(app);
+    require('./routes')(app);
 
-_.each(modules, function (options, moduleName) {
-    var module = require(moduleName).init(options, app);
+    _.each(modules, function (options, moduleName) {
+        var module = require(moduleName).init(options, app);
 
-    _.each(module.routers, function (router) {
-        app.use(router.middleware);
-    });
+        _.each(module.routers, function (router) {
+            app.use(router.middleware);
+        });
 
-    _.each(module.models, function (obj, key) {
-        if (models[key]) {
-            throw new Error('Error initialising module ' + moduleName + ', ' +
-                key + ' already defined');
-        }
+        _.each(module.models, function (obj, key) {
+            if (models[key]) {
+                throw new Error('Error initialising module ' + moduleName + ', ' +
+                    key + ' already defined');
+            }
 
-        models[key] = obj;
+            models[key] = obj;
+        });
     });
 });
 
@@ -153,6 +154,7 @@ app.listen(app.get('port'), '0.0.0.0', function () {
         'Express server listening on port '.green + app.get('port'),
         '\nPress Ctrl+C to shutdown'.grey
     );
+
 
 //    _.each(collectors, function (collector, collectorClassName) {
 //        collectorsStack[collectorClassName] = new collector();
