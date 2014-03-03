@@ -14,26 +14,27 @@ global.thinky = thinky;
 
 module.exports.thinky = thinky;
 
-var createTable = thinky.createTable = function (tableName, cb) {
+var createTable = thinky.createTable = function (tableName, cb, primaryKey) {
     r.db(config.db.name).tableList().run(connection, function (error, result) {
         if (error) {
             throw new Error(error);
         }
 
         if (result.indexOf(tableName) === -1) {
-            r.db(config.db.name).tableCreate(tableName).run(connection, function (error, result) {
-                if (error) console.log(error);
+            r.db(config.db.name).tableCreate(tableName, {primaryKey: primaryKey})
+                .run(connection, function (error, result) {
+                    if (error) console.log(error);
 
-                if ((result != null) && (result.created === 1)) {
-                    console.log('Table `%s` created', tableName);
-                    app.events.emit('db:table:created:' + tableName);
-                }
-                else {
-                    throw new Error('Error: Table `%s` not created', tableName);
-                }
+                    if ((result != null) && (result.created === 1)) {
+                        console.log('Table `%s` created', tableName);
+                        app.events.emit('db:table:created:' + tableName);
+                    }
+                    else {
+                        throw new Error('Error: Table `%s` not created', tableName);
+                    }
 
-                cb && cb(error, result);
-            });
+                    cb && cb(error, result);
+                });
         } else {
             console.log('Table %s — ok!', tableName);
             cb && cb(null, null);

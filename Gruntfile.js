@@ -78,24 +78,6 @@ module.exports = function (grunt) {
                 tasks: ['copy:modules']
             }
         },
-        shell: {
-            dmg: {
-                command: 'hdiutil create ./webkitbuilds/releases/tissue/mac/Home.dmg -srcfolder ./webkitbuilds/releases/home/mac/ -ov'
-            }
-        },
-        nodewebkit: {
-            options: {
-                build_dir: './webkitbuilds', // Where the build version of my node-webkit app is saved
-                mac: true, // We want to build it for mac
-                win: true, // We want to build it for win
-                linux32: false, // We don't need linux32
-                linux64: false, // We don't need linux64
-                version: '0.8.2'
-            },
-            // ResHacker.exe -addoverwrite "Project.exe", "Project.exe", "ProgramIcon.ico", ICONGROUP, MAINICON, 0
-            src: ['./*'] // Your node-wekit app
-        },
-
         connect: {
             options: {
                 port: 3000,
@@ -374,11 +356,6 @@ module.exports = function (grunt) {
         'copy:dist',
         'rev',
         'usemin'
-    ]);
-
-    grunt.registerTask('exe', [
-        'nodewebkit',
-        'shell:dmg'
     ]);
 
     grunt.registerTask('default', [

@@ -2,10 +2,11 @@
 .DS_Store
 *.iml
 
-.sass-cache
 .tmp
+.cache
 dist
 client/components
+npm-debug.log
 node_modules
 webkitbuilds
 test/bower_components

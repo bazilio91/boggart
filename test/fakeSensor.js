@@ -2,23 +2,14 @@ var http = require('http');
 
 function createData() {
     return JSON.stringify({
-        sensors: [
-            {
-                token: 'fakeSensor',
-                source: 'DHT11',
-                params: {
-                    param1: Math.floor(20 + Math.random() * 10),
-                    param2: Math.floor(23 + Math.random() * 10)
-                }
-            }
-        ]
+        param1: Math.floor(20 + Math.random() * 10),
+        param2: Math.floor(23 + Math.random() * 10)
     });
 }
 
 
 setInterval(function () {
     var jsonData = createData();
-
     var headers = {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(jsonData, 'utf8')
@@ -27,7 +18,7 @@ setInterval(function () {
     var options = {
         hostname: 'localhost',
         port: 3000,
-        path: '/api/sensors',
+        path: '/api/param',
         method: 'POST',
         headers: headers
     };
