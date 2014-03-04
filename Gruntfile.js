@@ -11,7 +11,8 @@ module.exports = function (grunt) {
     var moduleFiles = [],
         moduleLess = {},
         watchModuleJS = ['config/modules.js'],
-        watchServerModuleJS = ['config/modules.js'];
+        watchServerModuleJS = ['config/modules.js'],
+        moduleEJS = []
     _.each(modules, function (options, moduleName) {
         var module = require(moduleName);
         moduleFiles[moduleFiles.length] = {
@@ -32,6 +33,8 @@ module.exports = function (grunt) {
         watchServerModuleJS[watchServerModuleJS.length] = [
             'node_modules/' + moduleName + '/*.js'
         ];
+
+        moduleEJS[moduleEJS.length] = 'node_modules/' + moduleName + '/client/scripts/templates/**/*.ejs'
     });
 
     grunt.initConfig({
@@ -70,7 +73,7 @@ module.exports = function (grunt) {
                 tasks: ['express:server']
             },
             jst: {
-                files: ['<%= config.app %>/scripts/templates/{,*/}*.ejs'],
+                files: ['<%= config.app %>/scripts/templates/{,*/}*.ejs'].concat(moduleEJS),
                 tasks: ['jst']
             },
             modulesJS: {
@@ -112,12 +115,16 @@ module.exports = function (grunt) {
             options: {
                 amd: true,
                 processName: function (filename) {
-                    return filename.replace('client/scripts/templates/', '').replace('.ejs', '');
+                    if (filename.indexOf('node_modules') === 0) {
+                        return filename.replace(/node_modules\/(.*)\/client\/scripts\/templates\/(.*)\.ejs/, '$1/$2')
+                    } else {
+                        return filename.replace('client/scripts/templates/', '').replace('.ejs', '');
+                    }
                 }
             },
             compile: {
                 files: {
-                    '.tmp/scripts/templates.js': ['<%= config.app %>/scripts/templates/{,*/}*.ejs']
+                    '.tmp/scripts/templates.js': ['<%= config.app %>/scripts/templates/{,*/}*.ejs'].concat(moduleEJS)
                 }
             }
         },
