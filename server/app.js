@@ -3,7 +3,7 @@
 
 var express = require('express.io'),
     EventEmitter2 = require('eventemitter2').EventEmitter2;
-global.app = express();
+var app = global.app = express();
 app.events = new EventEmitter2({
     wildcard: true, delimiter: ':', maxListeners: 100
 });
@@ -130,21 +130,34 @@ app.configure(function () {
 
     require('./routes')(app);
 
-    _.each(modules, function (options, moduleName) {
-        var module = require(moduleName).init(options, app);
 
-        _.each(module.routers, function (router) {
+    app.modules = {};
+    _.each(modules, function (options, moduleName) {
+        // Todo: move all of this shit to module?
+        var module = require(moduleName),
+            moduleData = module.init(options, app);
+
+        _.each(moduleData.routers, function (router) {
             app.use(router.middleware);
         });
 
-        _.each(module.models, function (obj, key) {
-            if (models[key]) {
+        _.each(moduleData.models, function (obj, key) {
+            if (global.models[key]) {
                 throw new Error('Error initialising module ' + moduleName + ', ' +
                     key + ' already defined');
             }
 
-            models[key] = obj;
+            global.models[key] = obj;
         });
+
+        app.modules[moduleName] = module;
+    });
+
+    _.each(app.modules, function(module){
+        if (module.run) {
+            console.log('Running %s module', module.name);
+            module.run(app);
+        }
     });
 });
 
